@@ -1,18 +1,14 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquare, Search, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { messageService } from '@/services/api';
-import { Message, User } from '@/types';
+import { Message } from '@/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ConversationList from '@/components/messaging/ConversationList';
+import ChatWindow from '@/components/messaging/ChatWindow';
 
 // Mock conversations for demonstration
 const mockConversations = [
@@ -97,15 +93,12 @@ const mockMessages = [
 ];
 
 const Messaging = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   
-  const [searchTerm, setSearchTerm] = useState('');
   const [conversations, setConversations] = useState(mockConversations);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
   
   // Load conversation when selected
   useEffect(() => {
@@ -121,12 +114,8 @@ const Messaging = () => {
     }
   }, [selectedConversation]);
   
-  const filteredConversations = conversations.filter(conv => 
-    conv.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedConversation) return;
+  const handleSendMessage = (newMessage: string) => {
+    if (!selectedConversation) return;
     
     // In a real app, this would send the message to an API
     const selectedConv = conversations.find(c => c.id === selectedConversation);
@@ -145,7 +134,6 @@ const Messaging = () => {
     };
     
     setMessages([...messages, newMsg]);
-    setNewMessage('');
     
     toast({
       title: "Message sent",
@@ -172,154 +160,19 @@ const Messaging = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
-              {/* Conversations List */}
-              <Card className="md:col-span-1">
-                <CardHeader className="pb-3">
-                  <CardTitle>Conversations</CardTitle>
-                  <div className="relative mt-2">
-                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
-                    <Input
-                      placeholder="Search conversations..."
-                      className="pl-8"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="h-[500px] overflow-y-auto">
-                  {filteredConversations.length > 0 ? (
-                    <div className="space-y-2">
-                      {filteredConversations.map((conv) => (
-                        <div 
-                          key={conv.id}
-                          className={`p-3 rounded-lg cursor-pointer transition-colors flex items-start ${
-                            selectedConversation === conv.id 
-                              ? 'bg-market-100' 
-                              : 'hover:bg-gray-100'
-                          }`}
-                          onClick={() => setSelectedConversation(conv.id)}
-                        >
-                          <Avatar className="h-10 w-10 mr-3">
-                            <AvatarImage src={conv.avatar} alt={conv.name} />
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start">
-                              <h4 className="font-medium truncate">{conv.name}</h4>
-                              <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                {conv.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground truncate">{conv.lastMessage}</p>
-                          </div>
-                          {conv.unread > 0 && (
-                            <div className="bg-market-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs ml-2">
-                              {conv.unread}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                      <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="font-medium mb-1">No conversations found</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {searchTerm 
-                          ? `No results for "${searchTerm}"`
-                          : "Start a conversation from product listings"
-                        }
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <ConversationList
+                conversations={conversations}
+                selectedConversation={selectedConversation}
+                onSelectConversation={setSelectedConversation}
+              />
               
-              {/* Chat Window */}
-              <Card className="md:col-span-2">
-                {selectedConversation ? (
-                  <>
-                    <CardHeader className="pb-3 border-b">
-                      {(() => {
-                        const conv = conversations.find(c => c.id === selectedConversation);
-                        return conv ? (
-                          <div className="flex items-center">
-                            <Avatar className="h-10 w-10 mr-3">
-                              <AvatarImage src={conv.avatar} alt={conv.name} />
-                            </Avatar>
-                            <div>
-                              <CardTitle className="text-lg">{conv.name}</CardTitle>
-                              <CardDescription>{conv.userType}</CardDescription>
-                            </div>
-                          </div>
-                        ) : null;
-                      })()}
-                    </CardHeader>
-                    <CardContent className="p-0 flex flex-col h-[500px]">
-                      {/* Messages */}
-                      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {messages.map((message) => {
-                          const isCurrentUser = message.senderId === (user?.id || 'current-user');
-                          
-                          return (
-                            <div 
-                              key={message.id}
-                              className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                            >
-                              <div 
-                                className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                                  isCurrentUser 
-                                    ? 'bg-market-600 text-white' 
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}
-                              >
-                                <p>{message.content}</p>
-                                <p className={`text-xs mt-1 ${isCurrentUser ? 'text-market-100' : 'text-gray-500'}`}>
-                                  {message.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      
-                      {/* Message Input */}
-                      <div className="p-4 border-t">
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Type your message..."
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSendMessage();
-                              }
-                            }}
-                            className="flex-1"
-                          />
-                          <Button onClick={handleSendMessage} className="bg-market-600 hover:bg-market-700">
-                            <Send size={18} />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-[536px] text-center p-6">
-                    <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
-                    <h3 className="text-xl font-medium mb-2">No conversation selected</h3>
-                    <p className="text-muted-foreground mb-6">
-                      Select a conversation to start chatting or negotiate prices with farmers and traders.
-                    </p>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate('/products')}
-                    >
-                      Browse Products
-                    </Button>
-                  </div>
-                )}
-              </Card>
+              <ChatWindow
+                selectedConversation={selectedConversation}
+                conversations={conversations}
+                messages={messages}
+                currentUser={user}
+                onSendMessage={handleSendMessage}
+              />
             </div>
           </motion.div>
         </div>
