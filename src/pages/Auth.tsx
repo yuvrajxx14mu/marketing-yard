@@ -16,7 +16,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { login, register, isLoading } = useAuth();
+  const { login, register, isLoading, isAuthenticated, user } = useAuth();
   
   const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,8 +24,18 @@ const Auth = () => {
     name: '',
     email: '',
     password: '',
+    phone: '',
     userType: 'farmer' as UserRole,
   });
+
+  // If user is already authenticated, redirect to appropriate dashboard
+  if (isAuthenticated && user) {
+    if (user.userType === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -44,24 +54,20 @@ const Auth = () => {
           formData.name, 
           formData.email, 
           formData.password, 
-          formData.userType
+          formData.userType,
+          formData.phone
         );
       } else {
         await login(
           formData.email, 
-          formData.password, 
-          formData.userType
+          formData.password
         );
       }
       
-      // Redirect based on user type
-      if (formData.userType === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      // The AuthContext will handle the redirections based on the user role
     } catch (error) {
       console.error('Authentication error:', error);
+      // Error handling is done in the AuthContext
     }
   };
 
@@ -87,8 +93,8 @@ const Auth = () => {
               </h1>
               <p className="text-market-600 mt-2">
                 {isSignUp 
-                  ? 'Join MarketYard and start trading agricultural products today'
-                  : 'Sign in to access your MarketYard account'}
+                  ? 'Join CropBid and start trading agricultural products today'
+                  : 'Sign in to access your CropBid account'}
               </p>
             </div>
 
@@ -142,6 +148,19 @@ const Auth = () => {
                 </div>
               </div>
 
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    placeholder="Enter your phone number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="userType">I am a</Label>
                 <select
@@ -154,7 +173,6 @@ const Auth = () => {
                 >
                   <option value="farmer">Farmer</option>
                   <option value="trader">Trader</option>
-                  <option value="admin">Admin</option>
                 </select>
               </div>
 

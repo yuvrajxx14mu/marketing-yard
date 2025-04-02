@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
@@ -7,48 +7,24 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FarmerDashboard from '@/components/dashboard/FarmerDashboard';
 import TraderDashboard from '@/components/dashboard/TraderDashboard';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  userType: 'farmer' | 'trader';
-}
+import { useAuth } from '@/context/AuthContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     // Check if user is logged in
-    const userData = localStorage.getItem('marketyard_user');
-    if (!userData) {
+    if (!isLoading && !isAuthenticated) {
       toast({
         title: "Authentication required",
         description: "Please sign in to access your dashboard.",
         variant: "destructive",
       });
       navigate('/auth');
-      return;
     }
-
-    try {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-    } catch (e) {
-      console.error('Error parsing user data:', e);
-      toast({
-        title: "Authentication error",
-        description: "There was a problem with your login. Please sign in again.",
-        variant: "destructive",
-      });
-      navigate('/auth');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [navigate, toast]);
+  }, [isLoading, isAuthenticated, navigate, toast]);
 
   return (
     <div className="min-h-screen flex flex-col">
