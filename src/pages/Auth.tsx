@@ -6,67 +6,63 @@ import { Check, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { UserRole } from '@/types';
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { login, register, isLoading } = useAuth();
+  
   const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    userType: 'farmer',
+    userType: 'farmer' as UserRole,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ 
+      ...prev, 
+      [name]: name === 'userType' ? value as UserRole : value 
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simulate authentication
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Store user info in localStorage (for demo purposes)
+    
+    try {
       if (isSignUp) {
-        localStorage.setItem('marketyard_user', JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          userType: formData.userType,
-          isLoggedIn: true
-        }));
-        
-        toast({
-          title: "Account created!",
-          description: "Welcome to MarketYard. Your account has been created successfully.",
-          variant: "default",
-        });
+        await register(
+          formData.name, 
+          formData.email, 
+          formData.password, 
+          formData.userType
+        );
       } else {
-        localStorage.setItem('marketyard_user', JSON.stringify({
-          email: formData.email,
-          userType: formData.userType,
-          isLoggedIn: true
-        }));
-        
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in to your account.",
-          variant: "default",
-        });
+        await login(
+          formData.email, 
+          formData.password, 
+          formData.userType
+        );
       }
       
-      navigate('/products');
-    }, 1500);
+      // Redirect based on user type
+      if (formData.userType === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+    }
   };
 
   const toggleAuthMode = () => {
@@ -158,6 +154,7 @@ const Auth = () => {
                 >
                   <option value="farmer">Farmer</option>
                   <option value="trader">Trader</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
 

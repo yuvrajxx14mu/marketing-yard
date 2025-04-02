@@ -1,212 +1,150 @@
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Check } from 'lucide-react';
-import { toast } from 'sonner';
+import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Bell, Mail, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+// Define notification channel types
+type NotificationChannel = 'email' | 'push' | 'sms';
+
+// Define notification types
+type NotificationType = 'bids' | 'messages' | 'updates' | 'marketing';
+
+interface NotificationSetting {
+  type: NotificationType;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  channels: {
+    [key in NotificationChannel]: boolean;
+  };
+}
 
 const NotificationSettings = () => {
-  // In a real app, these would be loaded from user's saved preferences
-  const [notifications, setNotifications] = useState({
-    email: {
-      marketUpdates: true,
-      bidActivity: true,
-      productActivity: true,
-      messages: true,
-      promotions: false
-    },
-    push: {
-      marketUpdates: false,
-      bidActivity: true,
-      productActivity: true,
-      messages: true,
-      promotions: false
-    }
-  });
-
-  const handleToggle = (channel: 'email' | 'push', setting: string) => {
-    setNotifications(prev => ({
-      ...prev,
-      [channel]: {
-        ...prev[channel],
-        [setting]: !prev[channel][setting as keyof typeof prev[channel]]
+  const { toast } = useToast();
+  
+  const [settings, setSettings] = useState<NotificationSetting[]>([
+    {
+      type: 'bids',
+      label: 'Bid Notifications',
+      description: 'Get notified when someone places a bid on your product',
+      icon: <Bell className="h-5 w-5 text-market-600" />,
+      channels: {
+        email: true,
+        push: true,
+        sms: false
       }
-    }));
+    },
+    {
+      type: 'messages',
+      label: 'Message Notifications',
+      description: 'Get notified when you receive a new message',
+      icon: <MessageSquare className="h-5 w-5 text-market-600" />,
+      channels: {
+        email: true,
+        push: true,
+        sms: false
+      }
+    },
+    {
+      type: 'updates',
+      label: 'Product Updates',
+      description: 'Get notified about status changes to your products or orders',
+      icon: <Bell className="h-5 w-5 text-market-600" />,
+      channels: {
+        email: true,
+        push: false,
+        sms: false
+      }
+    },
+    {
+      type: 'marketing',
+      label: 'Marketing Communications',
+      description: 'Receive offers, promotions and updates from us',
+      icon: <Mail className="h-5 w-5 text-market-600" />,
+      channels: {
+        email: false,
+        push: false,
+        sms: false
+      }
+    }
+  ]);
+
+  const handleToggle = (typeIndex: number, channel: NotificationChannel) => {
+    const newSettings = [...settings];
+    newSettings[typeIndex].channels[channel] = !newSettings[typeIndex].channels[channel];
+    setSettings(newSettings);
   };
 
-  const handleSave = () => {
-    // In a real app, these settings would be saved to a backend
-    localStorage.setItem('notification_preferences', JSON.stringify(notifications));
-    toast.success('Notification preferences saved!');
+  const saveSettings = () => {
+    // This would typically call an API to save the settings
+    toast({
+      title: "Settings saved",
+      description: "Your notification preferences have been updated",
+    });
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card>
-        <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-          <CardDescription>
-            Control how and when you receive notifications from MarketYard
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Email Notifications */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Email Notifications</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="email-market" className="text-base">Market Updates</Label>
-                    <p className="text-sm text-muted-foreground">Receive updates about market prices and trends</p>
-                  </div>
-                  <Switch 
-                    id="email-market" 
-                    checked={notifications.email.marketUpdates}
-                    onCheckedChange={() => handleToggle('email', 'marketUpdates')}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="email-bids" className="text-base">Bid Activity</Label>
-                    <p className="text-sm text-muted-foreground">Notifications about new bids or bid updates</p>
-                  </div>
-                  <Switch 
-                    id="email-bids" 
-                    checked={notifications.email.bidActivity}
-                    onCheckedChange={() => handleToggle('email', 'bidActivity')}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="email-products" className="text-base">Product Activity</Label>
-                    <p className="text-sm text-muted-foreground">Updates on your listed products or saved products</p>
-                  </div>
-                  <Switch 
-                    id="email-products" 
-                    checked={notifications.email.productActivity}
-                    onCheckedChange={() => handleToggle('email', 'productActivity')}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="email-messages" className="text-base">Messages</Label>
-                    <p className="text-sm text-muted-foreground">Receive email notifications for new messages</p>
-                  </div>
-                  <Switch 
-                    id="email-messages" 
-                    checked={notifications.email.messages}
-                    onCheckedChange={() => handleToggle('email', 'messages')}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="email-promotions" className="text-base">Promotions & Updates</Label>
-                    <p className="text-sm text-muted-foreground">Marketing emails and platform updates</p>
-                  </div>
-                  <Switch 
-                    id="email-promotions" 
-                    checked={notifications.email.promotions}
-                    onCheckedChange={() => handleToggle('email', 'promotions')}
-                  />
-                </div>
-              </div>
-            </div>
+    <Card>
+      <CardContent className="pt-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-medium">Notification Preferences</h3>
+          <p className="text-sm text-muted-foreground">
+            Choose how and when you want to be notified
+          </p>
+        </div>
 
-            <Separator />
-            
-            {/* Push Notifications */}
-            <div>
-              <h3 className="text-lg font-medium mb-4">Push Notifications</h3>
-              <div className="space-y-4">
+        <div className="space-y-8">
+          {settings.map((setting, settingIndex) => (
+            <div key={setting.type} className="border-b pb-6 last:border-b-0">
+              <div className="flex items-start mb-4">
+                <div className="mr-3">{setting.icon}</div>
+                <div>
+                  <h4 className="font-medium">{setting.label}</h4>
+                  <p className="text-sm text-muted-foreground">{setting.description}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 mt-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-market" className="text-base">Market Updates</Label>
-                    <p className="text-sm text-muted-foreground">Receive updates about market prices and trends</p>
-                  </div>
+                  <Label htmlFor={`email-${setting.type}`} className="mr-2">Email</Label>
                   <Switch 
-                    id="push-market" 
-                    checked={notifications.push.marketUpdates}
-                    onCheckedChange={() => handleToggle('push', 'marketUpdates')}
+                    id={`email-${setting.type}`}
+                    checked={setting.channels.email}
+                    onCheckedChange={() => handleToggle(settingIndex, 'email')}
                   />
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-bids" className="text-base">Bid Activity</Label>
-                    <p className="text-sm text-muted-foreground">Notifications about new bids or bid updates</p>
-                  </div>
+                  <Label htmlFor={`push-${setting.type}`} className="mr-2">Push</Label>
                   <Switch 
-                    id="push-bids" 
-                    checked={notifications.push.bidActivity}
-                    onCheckedChange={() => handleToggle('push', 'bidActivity')}
+                    id={`push-${setting.type}`}
+                    checked={setting.channels.push}
+                    onCheckedChange={() => handleToggle(settingIndex, 'push')}
                   />
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-products" className="text-base">Product Activity</Label>
-                    <p className="text-sm text-muted-foreground">Updates on your listed products or saved products</p>
-                  </div>
+                  <Label htmlFor={`sms-${setting.type}`} className="mr-2">SMS</Label>
                   <Switch 
-                    id="push-products" 
-                    checked={notifications.push.productActivity}
-                    onCheckedChange={() => handleToggle('push', 'productActivity')}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-messages" className="text-base">Messages</Label>
-                    <p className="text-sm text-muted-foreground">Receive push notifications for new messages</p>
-                  </div>
-                  <Switch 
-                    id="push-messages" 
-                    checked={notifications.push.messages}
-                    onCheckedChange={() => handleToggle('push', 'messages')}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-promotions" className="text-base">Promotions & Updates</Label>
-                    <p className="text-sm text-muted-foreground">Marketing notifications and platform updates</p>
-                  </div>
-                  <Switch 
-                    id="push-promotions" 
-                    checked={notifications.push.promotions}
-                    onCheckedChange={() => handleToggle('push', 'promotions')}
+                    id={`sms-${setting.type}`}
+                    checked={setting.channels.sms}
+                    onCheckedChange={() => handleToggle(settingIndex, 'sms')}
                   />
                 </div>
               </div>
             </div>
-            
-            {/* Save Button */}
-            <div className="flex justify-end">
-              <Button 
-                onClick={handleSave}
-                className="bg-market-600 hover:bg-market-700"
-              >
-                <Check className="mr-2 h-4 w-4" />
-                Save Preferences
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+          ))}
+        </div>
+
+        <div className="flex justify-end mt-8">
+          <Button onClick={saveSettings} className="bg-market-600 hover:bg-market-700">Save Settings</Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
