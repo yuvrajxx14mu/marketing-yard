@@ -130,7 +130,7 @@ const Messaging = () => {
       content: newMessage,
       type: 'chat',
       read: false,
-      createdAt: new Date()
+      createdAt: new Date() // This is definitely a Date object now
     };
     
     setMessages([...messages, newMsg]);
@@ -140,6 +140,16 @@ const Messaging = () => {
       description: "Your message has been delivered."
     });
   };
+  
+  // Create a user object that satisfies the User interface required by ChatWindow
+  const currentUserForChat = user ? {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    userType: user.userType,
+    status: user.status,
+    createdAt: new Date(), // Add the missing createdAt property
+  } : null;
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -170,7 +180,7 @@ const Messaging = () => {
                 selectedConversation={selectedConversation}
                 conversations={conversations}
                 messages={messages}
-                currentUser={user}
+                currentUser={currentUserForChat}
                 onSendMessage={handleSendMessage}
               />
             </div>
