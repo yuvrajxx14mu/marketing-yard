@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +22,14 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <nav 
@@ -56,20 +66,33 @@ const Navbar = () => {
             </div>
           </div>
           <Link to="/contact" className="nav-link">Contact</Link>
+          {isAuthenticated && <Link to="/dashboard" className="nav-link">Dashboard</Link>}
         </div>
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center space-x-4">
-          <Link to="/auth">
-            <Button variant="outline" className="border-market-200 text-market-800 hover:bg-market-50">
-              Sign In
-            </Button>
-          </Link>
-          <Link to="/auth?signup=true">
-            <Button className="bg-market-600 hover:bg-market-700 text-white">
-              Register
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-market-800">Hi, {user?.name || 'User'}</span>
+              <Button variant="outline" className="border-market-200 text-market-800 hover:bg-market-50" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Link to="/auth">
+                <Button variant="outline" className="border-market-200 text-market-800 hover:bg-market-50">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/auth?signup=true">
+                <Button className="bg-market-600 hover:bg-market-700 text-white">
+                  Register
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -96,17 +119,37 @@ const Navbar = () => {
           <Link to="/products" className="nav-link" onClick={() => setIsOpen(false)}>Products</Link>
           <Link to="/about" className="nav-link" onClick={() => setIsOpen(false)}>About</Link>
           <Link to="/contact" className="nav-link" onClick={() => setIsOpen(false)}>Contact</Link>
+          {isAuthenticated && (
+            <Link to="/dashboard" className="nav-link" onClick={() => setIsOpen(false)}>Dashboard</Link>
+          )}
+          
           <div className="pt-4 flex flex-col space-y-2">
-            <Link to="/auth" onClick={() => setIsOpen(false)}>
-              <Button variant="outline" className="w-full border-market-200 text-market-800 hover:bg-market-50">
-                Sign In
+            {isAuthenticated ? (
+              <Button 
+                variant="outline" 
+                className="w-full border-market-200 text-market-800 hover:bg-market-50"
+                onClick={() => {
+                  handleLogout();
+                  setIsOpen(false);
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
               </Button>
-            </Link>
-            <Link to="/auth?signup=true" onClick={() => setIsOpen(false)}>
-              <Button className="w-full bg-market-600 hover:bg-market-700 text-white">
-                Register
-              </Button>
-            </Link>
+            ) : (
+              <>
+                <Link to="/auth" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full border-market-200 text-market-800 hover:bg-market-50">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth?signup=true" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full bg-market-600 hover:bg-market-700 text-white">
+                    Register
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
