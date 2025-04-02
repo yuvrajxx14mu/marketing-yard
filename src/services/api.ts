@@ -1,5 +1,19 @@
 
-import { User, Product, Bid, Transaction, Message, FarmerProfile, TraderProfile, UserRole } from '@/types';
+import { 
+  User, 
+  Product, 
+  Bid, 
+  Transaction, 
+  Message, 
+  FarmerProfile, 
+  TraderProfile, 
+  UserRole,
+  UserStatus,
+  ProductStatus,
+  BidStatus,
+  TransactionStatus,
+  PaymentStatus
+} from '@/types';
 
 // Base URL for API calls
 const API_BASE_URL = '/api';
@@ -28,8 +42,96 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   }
 };
 
+// Helper function to create mock responses of the correct type
+const createMockResponse = <T>(data: any): T => {
+  return data as unknown as T;
+};
+
+// Mock data generators
+const generateMockProducts = (): Product[] => {
+  return [
+    {
+      id: '1',
+      title: 'Premium Wheat',
+      description: 'High-quality wheat grain',
+      category: 'Grains',
+      price: 2500,
+      quantity: 100,
+      unit: 'quintal',
+      imageUrl: 'https://example.com/wheat.jpg',
+      farmerId: '101',
+      farmerName: 'Rajesh Patel',
+      location: 'Punjab',
+      status: 'available',
+      quality: 'Premium',
+      harvestDate: new Date(2023, 5, 15),
+      createdAt: new Date(2023, 6, 1)
+    }
+  ] as Product[];
+};
+
+const generateMockBids = (): Bid[] => {
+  return [
+    {
+      id: '1',
+      productId: '1',
+      productTitle: 'Premium Wheat',
+      farmerId: '101',
+      farmerName: 'Rajesh Patel',
+      traderId: '201',
+      traderName: 'Anita Desai',
+      bidAmount: 2300,
+      quantity: 50,
+      unit: 'quintal',
+      totalValue: 115000,
+      message: 'Interested in your premium wheat',
+      status: 'pending',
+      createdAt: new Date(2023, 6, 5),
+      imageUrl: 'https://example.com/wheat.jpg'
+    }
+  ] as Bid[];
+};
+
+const generateMockTransactions = (): Transaction[] => {
+  return [
+    {
+      id: '1',
+      productId: '1',
+      product: 'Premium Wheat',
+      bidId: '1',
+      farmerId: '101',
+      farmer: 'Rajesh Patel',
+      traderId: '201',
+      buyer: 'Anita Desai',
+      quantity: 50,
+      totalAmount: 115000,
+      status: 'completed',
+      paymentStatus: 'completed',
+      paymentMethod: 'Bank Transfer',
+      deliveryAddress: 'Market Yard, Mumbai',
+      deliveryDate: new Date(2023, 6, 10),
+      date: new Date(2023, 6, 7)
+    }
+  ] as Transaction[];
+};
+
+const generateMockMessages = (): Message[] => {
+  return [
+    {
+      id: '1',
+      senderId: '101',
+      senderName: 'Rajesh Patel',
+      receiverId: '201',
+      receiverName: 'Anita Desai',
+      content: 'Hello, I saw your listing for premium wheat.',
+      type: 'chat',
+      read: true,
+      createdAt: new Date(2023, 6, 3)
+    }
+  ] as Message[];
+};
+
 // Helper function to simulate API responses with mock data
-// In a real implementation, this would be replaced with actual API calls
 const handleMockResponse = (endpoint: string, options: RequestInit) => {
   // Extract method and body from options
   const method = options.method || 'GET';
@@ -73,15 +175,71 @@ const handleMockResponse = (endpoint: string, options: RequestInit) => {
     }
   };
   
-  // Mock storing the user in localStorage
-  const mockStoreUser = (user: User) => {
-    localStorage.setItem('marketyard_user', JSON.stringify(user));
-    return user;
-  };
+  // Mock API endpoints with appropriate return types
+  if (endpoint.startsWith('/products')) {
+    return createMockResponse<Product[] | Product>(generateMockProducts());
+  }
   
-  // Handle various API endpoints with mock data
-  // In production, these would be actual API calls
+  if (endpoint.startsWith('/farmers') && endpoint.includes('/products')) {
+    return createMockResponse<Product[]>(generateMockProducts());
+  }
   
+  if (endpoint.startsWith('/bids')) {
+    return createMockResponse<Bid[] | Bid>(generateMockBids());
+  }
+  
+  if (endpoint.startsWith('/traders') && endpoint.includes('/bids')) {
+    return createMockResponse<Bid[]>(generateMockBids());
+  }
+  
+  if (endpoint.startsWith('/farmers') && endpoint.includes('/bids')) {
+    return createMockResponse<Bid[]>(generateMockBids());
+  }
+  
+  if (endpoint.startsWith('/transactions')) {
+    return createMockResponse<Transaction[] | Transaction>(generateMockTransactions());
+  }
+  
+  if (endpoint.startsWith('/traders') && endpoint.includes('/transactions')) {
+    return createMockResponse<Transaction[]>(generateMockTransactions());
+  }
+  
+  if (endpoint.startsWith('/farmers') && endpoint.includes('/transactions')) {
+    return createMockResponse<Transaction[]>(generateMockTransactions());
+  }
+  
+  if (endpoint.startsWith('/users') && endpoint.includes('/messages')) {
+    return createMockResponse<Message[]>(generateMockMessages());
+  }
+  
+  if (endpoint.startsWith('/conversations')) {
+    return createMockResponse<Message[]>(generateMockMessages());
+  }
+  
+  if (endpoint.startsWith('/messages')) {
+    return createMockResponse<Message>(generateMockMessages()[0]);
+  }
+  
+  if (endpoint.startsWith('/admin/users')) {
+    return createMockResponse<User[]>([{
+      id: '123',
+      name: 'Demo User',
+      email: 'demo@example.com',
+      userType: 'farmer',
+      status: 'active',
+      createdAt: new Date()
+    }]);
+  }
+  
+  if (endpoint.startsWith('/admin/products')) {
+    return createMockResponse<Product[]>(generateMockProducts());
+  }
+  
+  if (endpoint.startsWith('/admin/transactions')) {
+    return createMockResponse<Transaction[]>(generateMockTransactions());
+  }
+  
+  // Default fallback
   return { message: 'Mock response not implemented for this endpoint' };
 };
 
