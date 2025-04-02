@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Search, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -149,7 +149,7 @@ const Messaging = () => {
     
     toast({
       title: "Message sent",
-      description: "Your message has been delivered.",
+      description: "Your message has been delivered."
     });
   };
   
@@ -200,7 +200,7 @@ const Messaging = () => {
                           onClick={() => setSelectedConversation(conv.id)}
                         >
                           <Avatar className="h-10 w-10 mr-3">
-                            <img src={conv.avatar} alt={conv.name} />
+                            <AvatarImage src={conv.avatar} alt={conv.name} />
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex justify-between items-start">
@@ -244,7 +244,7 @@ const Messaging = () => {
                         return conv ? (
                           <div className="flex items-center">
                             <Avatar className="h-10 w-10 mr-3">
-                              <img src={conv.avatar} alt={conv.name} />
+                              <AvatarImage src={conv.avatar} alt={conv.name} />
                             </Avatar>
                             <div>
                               <CardTitle className="text-lg">{conv.name}</CardTitle>
