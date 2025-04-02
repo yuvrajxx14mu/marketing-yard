@@ -31,7 +31,7 @@ const mockConversations = [
     userId: '102',
     name: 'Anita Desai',
     userType: 'trader',
-    lastMessage: 'I'm interested in your organic rice listing',
+    lastMessage: 'I\'m interested in your organic rice listing',
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
     unread: 0,
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
